@@ -39,7 +39,7 @@ local UPDATE_PATH = "/robocop92/BoL/master/AssAshe.lua"
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
 
-function SelfUpdateText(text) print ("<b><font color=\"#9b1818\">Ass-Ashe:</b></font> <i><font color=\"#FFFFFF\">..text..</i></font>") end
+function SelfUpdateText(text) print ("<b><font color=\"#9b1818\">Ass-Ashe:</b></font> <i><font color=\"#FFFFFF\">"..text.."</i></font>") end
 if _G.UseUpdater then
   local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
    if ServerData then
