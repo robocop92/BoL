@@ -1,4 +1,4 @@
-local version = "1.1"
+local version = "1.2"
 
 --[[
       Ass-Ashe
@@ -101,21 +101,9 @@ function OnTick()
 --    KillSteal()
 --  end
   
- TargetSelector:update()
- Target = GetCustomTarget()
+ Checks()
 end
-
-function OnDraw()
-  if not myHero.dead and not Settings.drawing.mDraw then
-    if myHero:CanUseSpell(_W) and Settings.drawing.wDraw then
-      DrawCircle(myHero.x, myHero.y, myHero.z, 1200, RGB(Settings.drawing.wColor[2], Settings.drawing.wColor[3], Settings.drawing.wColor[4]))
-    end
-    if Settings.drawing.myHero then
-     DrawCircle(myHero.x, myHero.y, myHero.z, 650, RGB(Settings.drawing.myColor[2], Settings.drawing.myColor[3], Settings.drawing.myColor[4]))
-    end
-  end
-end
-  
+ 
 function OnWndMsg(msg, key)
   if msg == WM_LBUTTONDOWN then
     local enemyDistance, enemySelected = 0, nil
@@ -170,7 +158,7 @@ function Farm()
  end 
 end
 
-function LaneClear()
+function Lane()
  enemyMinions:update()
  if LaneClearKey and not ManaLow("LaneClear") then
   for i, minion in pairs(enemyMinions.objects) do
@@ -188,7 +176,7 @@ function LaneClear()
  end
 end
 
-function JungleClear()
+function Jungle()
  if Settings.jungle.jungleKey and not ManaLow("JungleClear") then
   local Mob = GetJungleMob()
   if Mob ~= nil then
@@ -235,48 +223,57 @@ function ManaLow(mode)
  end
 end
 
+function Checks()
+ TargetSelector:update()
+ Target = GetCustomTarget()
+end
+
 function Menu()
  Settings = scriptConfig("Ass-Ashe "..version.."", "robocop")
  
- Settings:addSubMenu("["..myHero.charName.."] - Combo Setings", "combo")
+ Settings:addSubMenu("[Ass-Ashe] - Combo Setings", "combo")
   Settings.combo:addParam("comboKey", "Combo Key", SCRIPT_PARAM_ONKEYDOWN, false, 32)
   Settings.combo:addParam("useQ", "Use (Q) in Combo", SCRIPT_PARAM_ONOFF, true)
   Settings.combo:addParam("useW", "Use (W) in Combo", SCRIPT_PARAM_ONOFF, true)
   Settings.combo:addParam("comboItems", "Use Items in Combo", SCRIPT_PARAM_ONOFF, true)
-  Settings.combo.permaShow("comboKey")
+--  Settings.combo.permaShow("comboKey")
  
- Settings:addSubMenu("["..myHero.charName.."] - Harass Setings", "harass")
+ Settings:addSubMenu("[Ass-Ashe] - Harass Setings", "harass")
   Settings.harass:addParam("harassKey", "Harass Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
   Settings.harass:addParam("harassToggle", "Harass toggle", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
   Settings.harass:addParam("useQ", "Use (Q) in Harass", SCRIPT_PARAM_ONOFF, false)
   Settings.harass:addParam("useW", "Use (W) in Harass", SCRIPT_PARAM_ONOFF, true)
-  Settings.harass.permaShow("harassKey")
-  
- Settings:addSubMenu("["..myHero.charName.."] - Lane Clear Settings", "lane")
+--  Settings.harass.permaShow("harassKey")
+ 
+ Settings:addSubMenu("[Ass-Ashe] - Farm Settings", "farm")
+  Settings.farm:addParam("farmKey", "Farm Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("X"))
+  Settings.farm:addParam("farmQ", "Farm with (Q)", SCRIPT_PARAM_ONOFF, true)
+  Settings.farm:addParam("farmW", "Farm with (W)", SCRIPT_PARAM_ONOFF, true)
+  Settings.farm:addParam("farmMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
+    
+ Settings:addSubMenu("[Ass-Ashe] - Lane Clear Settings", "lane")
   Settings.lane:addParam("laneKey", "Lane Clear Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
   Settings.lane:addParam("laneQ", "Clear with (Q)", SCRIPT_PARAM_ONOFF, true)
   Settings.lane:addParam("laneW", "Clear with (W)", SCRIPT_PARAM_ONOFF, true)
   Settings.lane:addParam("laneMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
-  Settings.lane:permaShow("laneKey")
+--  Settings.lane:permaShow("laneKey")
  
- Settings:addSubMenu("["..myHero.charName.."] - Draw Settings", "drawing")  
-  Settings.drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
-  Settings.drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
-  Settings.drawing:addParam("Text", "Draw Text on Target", SCRIPT_PARAM_ONOFF, true)
-  Settings.drawing:addParam("myHero", "Draw My Range", SCRIPT_PARAM_ONOFF, true)
-  Settings.drawing:addParam("myColor", "Draw My Range Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
-  Settings.drawing:addParam("wDraw", "Draw (W) Range", SCRIPT_PARAM_ONOFF, true)
-  Settings.drawing:addParam("wColor", "Draw (W) Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
+ Settings:addSubMenu("[Ass-Ashe] - Jungle Clear Settings", "jungle")
+  Settings.jungle:addParam("jungleKey", "Jungle Clear Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
+  Settings.jungle:addParam("jungleQ", "Clear with (Q)", SCRIPT_PARAM_ONOFF, true)
+  Settings.jungle:addParam("jungleW", "Clear with (W)", SCRIPT_PARAM_ONOFF, true)
+  Settings.jungle:addParam("jungleMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
   
- Settings:addSubMenu("["..myHero.charName.."] - Orbwalking Settings", "Orbwalking")
+  
+ Settings:addSubMenu("[Ass-Ashe] - Orbwalking Settings", "Orbwalking")
   if RebornLoad() then
    Settings.Orbwalking:addParam("Info", "Sida's Auto Carry loaded!", SCRIPT_PARAM_INFO, "")
   else
    SxOrb:LoadToMenu(Settings.Orbwalking)
   end
-  
+ 
  TargetSelector = TargetSelector(TARGET_LOW_HP_PRIORITY, 650, DAMAGE_PHYSICAL, true)
- TargetSelector.name = "Ezreal"
+ TargetSelector.name = "Ashe"
  Settings:addTS(TargetSelector)
 end
 
@@ -289,8 +286,6 @@ function Variables()
  end
  JungleMobs = {}
  JungleFocusMobs = {}
- _G.oldDrawCircle = rawget(_G,'Drawcircle')
- _G.DrawCircle = DrawCircle2
 
  priorityTable = {
   AP = {
@@ -319,7 +314,6 @@ function Variables()
   }
  }
  
-end
 
 if GetGame().map.shortName == "twistedTreeline" then
   TwistedTreeline = true
@@ -402,6 +396,7 @@ for i = 0, objManager.maxObjects do
         JungleMobs[#JungleMobs+1] = object
       end
     end
+end
 end
 
 function SetPriority(table, hero, priority)
@@ -503,36 +498,6 @@ function GetCustomTarget()
     target = TargetSelector.target
   end
   return target
-end
-
-function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
-  radius = radius or 300
-  quality = math.max(8,round(180/math.deg((math.asin((chordlength/(2*radius)))))))
-  quality = 2 * math.pi / quality
-  radius = radius*.92
-  
-  local points = {}
-  for theta = 0, 2 * math.pi + quality, quality do
-    local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
-    points[#points + 1] = D3DXVECTOR2(c.x, c.y)
-  end
-  
-  DrawLines2(points, width or 1, color or 4294967295)
-end
-
-function round(num) 
-  if num >= 0 then return math.floor(num+.5) else return math.ceil(num-.5) end
-end
-
-function DrawCircle2(x, y, z, radius, color)
-  local vPos1 = Vector(x, y, z)
-  local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
-  local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
-  local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
-  
-  if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y }) then
-    DrawCircleNextLvl(x, y, z, radius, Settings.drawing.lfc.Width, color, Settings.drawing.lfc.CL) 
-  end
 end
 
 function RebornLoad()
