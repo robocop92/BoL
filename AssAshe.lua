@@ -1,16 +1,15 @@
-local version = "1.2"
+local version = "1.0"
 _G.UseUpdater = true
 
 --[[
       Ass-Ashe
         Developer: robocop
-        Version: 1.1
+        Version: 1.0
 --]]
 
-if myHero.charName ~= 'Ashe' then return end
+if myHero.charName ~= "Ashe" then return end
 
-local HP, HP_W
-local REQUIRED_LIBS = { ["HPrediction"] = "https://raw.githubusercontent.com/BolHTTF/BoL/master/HTTF/Common/HPrediction.lua", }
+local REQUIRED_LIBS = { ["VPrediction"] = "https://raw.githubusercontent.com/SidaBoL/Scripts/master/Common/VPrediction.lua", }
 local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
 
 function PostDownload()
@@ -27,7 +26,7 @@ for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs (REQUIRED_LIBS) do
     require (DOWNLOAD_LIB_NAME)
    else
      DOWNLOADING_LIBS = true
-     DOWNLOAD_COUNT = DOWNLOAD_Count + 1
+     DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
      DownloadFile (DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME.. ".lua", PostDownload)
  end
 end
@@ -75,6 +74,7 @@ function OnTick()
   FarmKey = Settings.farm.farmKey
   JungleClearKey = Settings.jungle.jungleKey
   LaneClearKey = Settings.lane.laneKey
+  Ultimate = Settings.ultimate.ultiKey
   
   if ComboKey then
     Combo(Target)
@@ -98,11 +98,10 @@ function OnTick()
     Lane()
   end
   
---  if Settings.ks.killSteal then
---    KillSteal()
---  end
-  
- Checks()
+  if Ultimate then
+   Ulti(Target)
+  end
+Checks()
 end
  
 function OnWndMsg(msg, key)
@@ -124,6 +123,15 @@ function OnWndMsg(msg, key)
     else
       targetSelected = nil
     end
+  end
+end
+
+function Ulti(unit)
+  if myHero:CanUseSpell(_R) == READY and ValidTarget(unit, Settings.ultimate.maxRange) then
+      local CP, HC = VP:GetLineCastPosition(unit, 0.25 , 260, Settings.ultimate.maxRange, 1500, myHero, true)
+      if CP and HC > -1 then
+        CastSpell(_R, CP.x, CP.z)
+      end  
   end
 end
 
@@ -189,7 +197,7 @@ end
 
 function AssCastW(unit)
  if myHero:CanUseSpell(_W) == READY and unit ~=nil and GetDistance(unit) <= 1200 then
-  local CP, HC = HP:GetPredict(HP_W, unit, myHero)
+  local CP, HC = VP:GetLineCastPosition(unit, 0.25 , 40, 1200, 1600, myHero, true)
   if CP and HC > -1 then
    CastSpell(_W, CP.x, CP.z)
   end  
@@ -237,14 +245,13 @@ function Menu()
   Settings.combo:addParam("useQ", "Use (Q) in Combo", SCRIPT_PARAM_ONOFF, true)
   Settings.combo:addParam("useW", "Use (W) in Combo", SCRIPT_PARAM_ONOFF, true)
   Settings.combo:addParam("comboItems", "Use Items in Combo", SCRIPT_PARAM_ONOFF, true)
---  Settings.combo.permaShow("comboKey")
  
  Settings:addSubMenu("[Ass-Ashe] - Harass Setings", "harass")
   Settings.harass:addParam("harassKey", "Harass Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("C"))
   Settings.harass:addParam("harassToggle", "Harass toggle", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
   Settings.harass:addParam("useQ", "Use (Q) in Harass", SCRIPT_PARAM_ONOFF, false)
   Settings.harass:addParam("useW", "Use (W) in Harass", SCRIPT_PARAM_ONOFF, true)
---  Settings.harass.permaShow("harassKey")
+
  
  Settings:addSubMenu("[Ass-Ashe] - Farm Settings", "farm")
   Settings.farm:addParam("farmKey", "Farm Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("X"))
@@ -257,7 +264,6 @@ function Menu()
   Settings.lane:addParam("laneQ", "Clear with (Q)", SCRIPT_PARAM_ONOFF, true)
   Settings.lane:addParam("laneW", "Clear with (W)", SCRIPT_PARAM_ONOFF, true)
   Settings.lane:addParam("laneMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
---  Settings.lane:permaShow("laneKey")
  
  Settings:addSubMenu("[Ass-Ashe] - Jungle Clear Settings", "jungle")
   Settings.jungle:addParam("jungleKey", "Jungle Clear Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("V"))
@@ -265,7 +271,11 @@ function Menu()
   Settings.jungle:addParam("jungleW", "Clear with (W)", SCRIPT_PARAM_ONOFF, true)
   Settings.jungle:addParam("jungleMana", "Min. Mana Percent: ", SCRIPT_PARAM_SLICE, 50, 0, 100, 0)
   
-  
+ Settings:addSubMenu("[Ass-Ashe] - Ultimate Settings", "ultimate")
+  Settings.ultimate:addParam("ultiKey", "Ultimate-Key", SCRIPT_PARAM_ONKEYDOWN, false, GetKey("T"))
+  Settings.ultimate:addParam("engage", "Use (R) to engage in Lane", SCRIPT_PARAM_ONOFF, false)
+  Settings.ultimate:addParam("maxRange", "Max Range for (R)", SCRIPT_PARAM_SLICE, 1100, 500, 3000)
+ 
  Settings:addSubMenu("[Ass-Ashe] - Orbwalking Settings", "Orbwalking")
   if RebornLoad() then
    Settings.Orbwalking:addParam("Info", "Sida's Auto Carry loaded!", SCRIPT_PARAM_INFO, "")
@@ -273,18 +283,17 @@ function Menu()
    SxOrb:LoadToMenu(Settings.Orbwalking)
   end
  
- TargetSelector = TargetSelector(TARGET_LOW_HP_PRIORITY, 650, DAMAGE_PHYSICAL, true)
+ TargetSelector = TargetSelector(TARGET_LOW_HP_PRIORITY, Settings.ultimate.maxRange, DAMAGE_PHYSICAL, true)
  TargetSelector.name = "Ashe"
  Settings:addTS(TargetSelector)
 end
 
 function Variables()
  enemyMinions = minionManager(MINION_ENEMY, 650, myHero, MINION_SORT_HEALTH_ASC)
- HP = HPrediction()
- HP_W = HPSkillshot({type = 'DelayLine', delay = 0.25, range = 1200, width = 40, speed = 2000, collisionM = true,})
  if not RebornLoad() then
   require ("SxOrbWalk")
  end
+ VP = VPrediction()
  JungleMobs = {}
  JungleFocusMobs = {}
 
