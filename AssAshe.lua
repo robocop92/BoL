@@ -1,4 +1,5 @@
 local version = "1.2"
+_G.UseUpdater = true
 
 --[[
       Ass-Ashe
